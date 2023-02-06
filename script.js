@@ -59,6 +59,18 @@ let gameboard = (function () {
   function placeElem(elem, row, col) {
     gameMatrix[row][col] = elem;
     ++placedElements;
+
+    for(let i = 0; i < avaiblePositions.length;++i){
+      if(avaiblePositions[i][0] === row && avaiblePositions[i][1] === col){
+        avaiblePositions.splice(i,1);
+        break;
+      }
+    }
+
+  }
+
+  function getElem(row,col){
+    return gameMatrix[row][col];
   }
 
   function iaRandomChoose(elem) {
@@ -67,6 +79,8 @@ let gameboard = (function () {
     let [row, col] = avaiblePositions.splice(randomIndex, 1);
 
     placeElem(elem, row, col);
+
+    return row,col;
   }
 
   function getMatrix() {
@@ -93,5 +107,64 @@ let gameboard = (function () {
     createBoard();
   }
 
+  createBoard();
+
   return { checkWinStatus, placeElem, iaRandomChoose, gameMatrix };
 })();
+
+
+document.querySelectorAll(".cell").forEach((elem) => {
+  elem.addEventListener("click", (e) => {
+    let playerCell = e.currentTarget;
+    if (!playerCell.getAttribute("data-player")) {
+      let [playerRow, playerColumn] = playerCell
+        .getAttribute("data-index")
+        .split(" ");
+
+      gameboard.placeElem("x", playerRow, playerColumn);
+
+      let [iaRow, iaColumn] = gameboard.iaRandomChoose('o');
+      let iaCell = document.querySelector(
+        `[data-index="${iaRow} ${iaColumn}"]`
+      );
+
+      playerCell.setAtributte("data-player", 0);
+      iaCell.setAttribute("data-player", 1);
+
+      let cross = document.createElement("img");
+      let circle = document.createElement("img");
+
+      cross.setAttribute("src", "./close.svg");
+      circle.setAttribute("src", "./circle.svg");
+
+      playerCell.appendChild(cross);
+      circle.appendChild(circle);
+
+      let gameboardStatus = gameboard.checkWinStatus();
+      let resultDiv = document.querySelector('.result');
+
+      if(gameboardStatus === 'tie'){
+
+        resultDiv.innerText = 'It\'s a tie';
+
+
+      }else if(gameboardStatus === 'x'){
+        resultDiv.innerText = 'The winner is you!';
+      }else if(gameboardStatus === 'o'){
+        resultDiv.innerText = 'The computer wins!';
+      }
+    }
+  });
+});
+
+
+document.querySelector('.restart-section > button',(e) => {
+  gameboard.reset();
+  document.querySelectorAll('.cell').forEach((elem) => {
+    elem.removeAttribute('data-player');
+  })
+
+  document.querySelectorAll('.cell > img').forEach((elem) => {
+    elem.remove();
+  })
+})
