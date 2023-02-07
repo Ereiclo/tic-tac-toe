@@ -10,20 +10,22 @@ let gameboard = (function() {
 
     function checkWinStatus() {
         for (let i = 0; i < matrixSize; ++i) {
-            let actualPlayer = gameMatrix[i][0];
+            let colPlayer = gameMatrix[0][i];
+            let rowPlayer = gameMatrix[i][0];
 
-            if (actualPlayer) {
+            if (colPlayer || rowPlayer) {
                 //check for every row if a player has won
-                let countRow = 1;
-                let countColumn = 1;
+                let countRow = rowPlayer ? 1 : 0;
+                let countColumn = colPlayer ? 1 : 0;
 
                 for (let j = 1; j < matrixSize; ++j) {
-                    if (gameMatrix[i][j] !== actualPlayer) ++countRow;
-                    else if (gameMatrix[j][i] !== actualPlayer) ++countColumn;
+                    if (rowPlayer && gameMatrix[i][j] === rowPlayer) ++countRow;
+                    if (colPlayer && gameMatrix[j][i] === colPlayer) ++countColumn;
                 }
-                if (countRow === matrixSize || countColumn === matrixSize)
-                    return actualPlayer;
-
+                if (countRow === matrixSize)
+                    return rowPlayer;
+                else if (countColumn === matrixSize)
+                    return colPlayer;
                 //check for every column if a player has won
             }
         }
@@ -41,13 +43,13 @@ let gameboard = (function() {
             if (diagCount === matrixSize) return diagPlayer;
         }
 
-        let negDiagPlayer = gameMatrix[matrixSize - 1][matrixSize - 1];
+        let negDiagPlayer = gameMatrix[0][matrixSize - 1];
 
         if (negDiagPlayer) {
             let negDiagCount = 1;
 
-            for (let i = 0; i < matrixSize; ++i) {
-                if (gameMatrix[i][matrixSize - 1 - i]) negDiagCount++;
+            for (let i = 1; i < matrixSize; ++i) {
+                if (gameMatrix[i][matrixSize - 1 - i] === negDiagPlayer) negDiagCount++;
             }
 
             if (negDiagCount == matrixSize) return negDiagPlayer;
@@ -67,7 +69,7 @@ let gameboard = (function() {
             }
         }
 
-        console.table(avaiblePositions);
+        // console.table(avaiblePositions);
 
     }
 
@@ -76,11 +78,15 @@ let gameboard = (function() {
     }
 
     function iaRandomChoose(elem) {
+        if (avaiblePositions.length === 0 || checkWinStatus() !== 'not finished') return [-1, -1];
+
         let randomIndex = Math.floor(Math.random() * avaiblePositions.length);
+
 
         let [row, col] = avaiblePositions.splice(randomIndex, 1)[0];
         console.log(row, col)
-            // console.log(avaiblePositions.splice(randomIndex, 1));
+
+        // console.log(avaiblePositions.splice(randomIndex, 1));
 
         placeElem(elem, row, col);
 
@@ -113,12 +119,14 @@ let gameboard = (function() {
 
     createBoard();
 
-    return { checkWinStatus, placeElem, iaRandomChoose, getMatrix };
+    return { checkWinStatus, placeElem, iaRandomChoose, getMatrix, reset };
 })();
 
 
 document.querySelectorAll(".cell").forEach((elem) => {
     elem.addEventListener("click", (e) => {
+        if (gameboard.checkWinStatus() !== 'not finished') return;
+
         let playerCell = e.currentTarget;
         if (!playerCell.getAttribute("data-player")) {
             let [playerRow, playerColumn] = playerCell
@@ -126,23 +134,26 @@ document.querySelectorAll(".cell").forEach((elem) => {
                 .split(" ");
 
             gameboard.placeElem("x", playerRow, playerColumn);
+            let cross = document.createElement("img");
+            cross.setAttribute("src", "./close.svg");
+            playerCell.setAttribute("data-player", 0);
+            playerCell.appendChild(cross);
 
             let [iaRow, iaColumn] = gameboard.iaRandomChoose('o');
-            let iaCell = document.querySelector(
-                `[data-index="${iaRow} ${iaColumn}"]`
-            );
 
-            playerCell.setAttribute("data-player", 0);
-            iaCell.setAttribute("data-player", 1);
+            if (iaRow >= 0) {
+                let iaCell = document.querySelector(
+                    `[data-index="${iaRow} ${iaColumn}"]`
+                );
+                iaCell.setAttribute("data-player", 1);
+                let circle = document.createElement("img");
+                circle.setAttribute("src", "./circle.svg");
+                iaCell.appendChild(circle);
 
-            let cross = document.createElement("img");
-            let circle = document.createElement("img");
+            }
 
-            cross.setAttribute("src", "./close.svg");
-            circle.setAttribute("src", "./circle.svg");
 
-            playerCell.appendChild(cross);
-            iaCell.appendChild(circle);
+
 
             let gameboardStatus = gameboard.checkWinStatus();
             let resultDiv = document.querySelector('.result');
@@ -162,8 +173,13 @@ document.querySelectorAll(".cell").forEach((elem) => {
 });
 
 
-document.querySelector('.restart-section > button', (e) => {
+document.querySelector('.restart-section > button').addEventListener('click', (e) => {
+    console.log('Uwu');
+
     gameboard.reset();
+
+    document.querySelector('.result').innerText = '';
+
     document.querySelectorAll('.cell').forEach((elem) => {
         elem.removeAttribute('data-player');
     })
