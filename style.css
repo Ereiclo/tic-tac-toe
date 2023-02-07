@@ -1,38 +1,39 @@
-.grid{
+.grid {
     width: 500px;
     height: 500px;
     border: 10px solid;
-    background-color: black ;
+    background-color: black;
     display: grid;
     gap: 10px;
-    grid-template-columns: repeat(3,1fr) ;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
 }
 
-
-.restart-section{
+.restart-section {
     display: grid;
     place-content: center;
     height: 80px;
 }
 
-.cell{
+.cell {
     background-color: white;
     display: grid;
     place-content: center;
 }
 
 body {
-
     display: grid;
     justify-content: center;
     /* align-items: center; */
     height: 100vh;
     align-content: start;
-
 }
 
-.result{
+.result {
     height: 80px;
-    text-align: center;
+    /* text-align: center; */
     font-size: 1.4rem;
+    display: grid;
+    place-items: center;
+    /* vertical-align: center; */
 }
